@@ -5,7 +5,6 @@ Or python -m mfx.optimize.xopt_scans for a default sim run-through
 """
 from __future__ import annotations
 
-from pydantic import validate_call
 import matplotlib.pyplot as plt
 
 from xopt import VOCS, Evaluator, Xopt
