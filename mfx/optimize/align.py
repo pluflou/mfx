@@ -3,6 +3,7 @@ from pydantic import validate_call
 from bluesky import RunEngine
 
 
+# TODO: make case insensitive? would make error messages less user friendly
 Diagnostics = Literal["XCS1", "DG1", "DG2"]
 Methods = Literal["Xopt", "blop"]
 Devices = Literal["yag", "wave8"]
