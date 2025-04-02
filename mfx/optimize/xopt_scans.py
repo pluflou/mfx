@@ -293,7 +293,7 @@ def run_sim_test_wave8() -> Xopt:
     print("Create Xopt")
     xopt = get_xopt_obj(
         device_type="wave8",
-        location="DG1",
+        location="dg1",
         goal=DG1_WAVE8_XPOS,
     )
     print("Randomly evaluate 3 points")
@@ -319,7 +319,7 @@ def run_sim_test_yag() -> Xopt:
     print("Create Xopt")
     xopt = get_xopt_obj(
         device_type="yag",
-        location="DG1",
+        location="dg1",
         goal=DG1_YAG_XPOS,
     )
     print("Randomly evaluate 3 points")
