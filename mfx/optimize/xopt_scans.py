@@ -5,13 +5,16 @@ Or python -m mfx.optimize.xopt_scans for a default sim run-through
 """
 from __future__ import annotations
 
+from pydantic import validate_call
 import matplotlib.pyplot as plt
+
 from xopt import VOCS, Evaluator, Xopt
 from xopt.generators.bayesian import ExpectedImprovementGenerator
 
 from lcls_tools.common.frontend.plotting.image import plot_image_projection_fit
 from lcls_tools.common.image.fit import ImageProjectionFit
 
+from .align import Devices, Diagnostics, Turbo
 from .mirror_hw import (
     XCS_YAG_XPOS,
     DG1_WAVE8_XPOS,
@@ -142,10 +145,10 @@ def get_evaluator_yag(
 
     return Evaluator(function=evaluate)
 
-
+@validate_call
 def get_xopt_obj(
-    device_type: str,
-    location: str,
+    device_type: Devices,
+    location: Diagnostics,
     goal: float,
     mirror_nominal: float = MIRROR_NOMINAL,
     search_delta: float = 5,
@@ -176,7 +179,7 @@ def get_xopt_obj(
     device_type: str
         One of "yag" or "wave8"
     location : str
-        One of "xcs1", "dg1", "dg2", "ip"
+        One of "xcs1", "dg1", "dg2", "ip" # TODO: should IP be added to Diagnostics?
     goal : float
         Either the wave8 xpos to aim for, or the x coordinate to aim for on a yag.
     mirror_nominal : float
@@ -193,11 +196,8 @@ def get_xopt_obj(
         Constraint on maximum yag total intensity count for data to be valid
     """
     device_type = device_type.lower()
-    if device_type not in ("yag", "wave8"):
-        raise ValueError("device_type must be yag or wave8")
     location = location.lower()
-    if location not in ("xcs1", "dg1", "dg2", "ip"):
-        raise ValueError("location must be one of xcs1, dg1, dg2, or ip")
+
     if device_type == "wave8" and location == "ip":
         raise ValueError("There is no wave8 at the ip")
 
@@ -225,7 +225,6 @@ def get_xopt_obj(
             wave8=location,
             wave8_xpos=goal,
         )
-    #generator = ExpectedImprovementGenerator(vocs=vocs)
     generator = ExpectedImprovementGenerator(vocs=vocs, turbo_controller=xopt_generator_turbo_controller)
     generator.gp_constructor.use_low_noise_prior = False
     return Xopt(
@@ -251,7 +250,7 @@ def run_sim_test_wave8() -> Xopt:
     print("Create Xopt")
     xopt = get_xopt_obj(
         device_type="wave8",
-        location="dg1",
+        location="DG1",
         goal=DG1_WAVE8_XPOS,
     )
     print("Randomly evaluate 3 points")
@@ -277,7 +276,7 @@ def run_sim_test_yag() -> Xopt:
     print("Create Xopt")
     xopt = get_xopt_obj(
         device_type="yag",
-        location="dg1",
+        location="DG1",
         goal=DG1_YAG_XPOS,
     )
     print("Randomly evaluate 3 points")
