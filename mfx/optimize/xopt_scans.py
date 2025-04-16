@@ -217,7 +217,7 @@ def get_xopt_obj(
     if device_type == "wave8":
         if location == "ip":
             raise ValueError("There is no wave8 at the ip.")
-        if {yag_size_min, yag_size_max, yag_intensity_min, yag_intensity_max} != {None}:
+        if any(v is not None for v in (yag_size_min, yag_size_max, yag_intensity_min, yag_intensity_max)):
             raise ValueError(
                 "Arguments yag_size_min, yag_size_max, yag_intensity_min, and yag_intensity_max "
                 "are only valid for yag devices. "
