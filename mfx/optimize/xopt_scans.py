@@ -205,7 +205,7 @@ def get_xopt_obj(
     centroid_x_max : float, optional
         Constraint on maximum centroid x value for data to be valid
     centroid_y_min : float, optional
-    Constraint on minimum centroid y value for data to be valid
+        Constraint on minimum centroid y value for data to be valid
     centroid_y_max : float, optional
         Constraint on maximum centroid y value for data to be valid
     xopt_generator_turbo_controller : str, optional
