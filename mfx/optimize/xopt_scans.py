@@ -5,7 +5,6 @@ Or python -m mfx.optimize.xopt_scans for a default sim run-through
 """
 from __future__ import annotations
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 from xopt import VOCS, Evaluator, Xopt
@@ -107,13 +106,6 @@ def get_evaluator_wave8(
     return Evaluator(function=evaluate)
 
 
-def get_yag_key(yag: str):
-    if yag == 'xcs1':
-        return "xcs_yag1"
-    else:
-        return f"mfx_{yag}_yag"
-
-
 def get_evaluator_yag(
     yag: str = "dg1",
     yag_xpos: float | None = None,
@@ -136,7 +128,10 @@ def get_evaluator_yag(
         print(f"Trying {input['mirror_pitch']}")
         devices = init_devices()
         devices["mr1l4_homs"].pitch.set(input["mirror_pitch"]).wait(timeout=20)
-        image_device = devices[get_yag_key(yag)].image1.shaped_image
+        if yag == 'xcs1':
+            image_device = devices["xcs_yag1"].shaped_image
+        else:
+            image_device = devices[f"mfx_{yag}_yag"].shaped_image
         image_device.trigger().wait(timeout=10)
         image = image_device.get()
         print(f"image shape: {image.shape}")
@@ -396,7 +391,7 @@ def get_xopt_obj_2d_markers(
     )
     print(vocs)
     evaluator = get_evaluator_yag_2d(yag=location)
-
+    
     generator = ExpectedImprovementGenerator(vocs=vocs, turbo_controller=xopt_generator_turbo_controller)
     generator.gp_constructor.use_low_noise_prior = False
     return Xopt(
@@ -468,52 +463,10 @@ def run_sim_test_yag() -> Xopt:
     print("Generating plots")
     xopt.data.plot(y=xopt.vocs.objective_names)
     imager = init_devices()["mfx_dg1_yag"]
-    imager.image1.shaped_image.trigger()
+    imager.shaped_image.trigger()
     fit = ImageProjectionFit()
-    fit_result = fit.fit_image(imager.image1.shaped_image.get())
+    fit_result = fit.fit_image(imager.shaped_image.get())
     plot_image_projection_fit(fit_result)
-    plt.show()
-    return xopt
-
-
-def run_sim_test_yag_2d() -> Xopt:
-    print("Create Xopt")
-    xopt = get_xopt_obj_2d_markers(
-        location="dg1",
-    )
-    print("Randomly evaluate 3 points")
-    xopt.random_evaluate(3)
-    print("Step xopt object 10 times")
-    imager = init_devices()["mfx_dg1_yag"]
-    centroids = [imager.image1.get_centroid()]
-    for num in range(10):
-        print(f"Step {num + 1}")
-        xopt.step()
-        centroids.append(imager.image1.get_centroid())
-    print("Get best point")
-    _, val, params = xopt.vocs.select_best(xopt.data)
-    print(f"Best objective value {val}")
-    print(f"Best point {params}")
-    print("Move to best point")
-    devices = init_devices()
-    mirror_pitch = devices["mr1l4_homs"].pitch
-    mirror_pitch.set(params["mirror_pitch"]).wait(timeout=20)
-    print(f"pitch is at {mirror_pitch.position}")
-    goal = devices["mfx_dg1_yag"].coords.standard_two_corners_target()
-    print(f"Goal was {goal}")
-    print("Generating plots")
-    xopt.data.plot(y=xopt.vocs.objective_names)
-
-    imager.image1.shaped_image.trigger()
-    fit = ImageProjectionFit()
-    image = imager.image1.shaped_image.get()
-    fit_result = fit.fit_image(image)
-    plot_image_projection_fit(fit_result)
-    plt.figure()
-    plt.imshow(image)
-    plt.plot(*goal, marker="o", color="red")
-    for pt in centroids:
-        plt.plot(*pt, marker=".", color="white")
     plt.show()
     return xopt
 
